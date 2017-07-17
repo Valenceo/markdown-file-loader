@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+<!-- Customize title here: -->
+  <title>Valenceo, LTD.</title>
+
+  <script src="/lib/marked.js"></script>
+  <script src="lib/marked.js"></script>
+
+</head>
+<body>
+  <div id="nav"></div>
+  <div id="header"></div>
+  <div id="content">
+    <p>Please enable JavaScript or download markdown</p>
+  </div>
+  <div id="footer"></div>
+
+  <script>
+// Customize these:
+var siteName = location.hostname || "Your name here";
+var thisPage = location.pathname || siteName;
+
+let [, path, filename ] = /(.*[\/])?(.*$|$)/.exec(location.pathname || "");
+let [, filepart, ext] = /(.+?)([.].[^.]*$|$)/.exec(filename || "");
+let markdownFile = `${path || '/'}${filepart || 'index'}.md`;
+
+// Breadcrumb trail:
+var breadcrumbLookup = {};
+let bc = '';
+for (let end of path.split('/')) {
+  if (end != "") {
+    bc += '/'+end;
+    breadcrumbLookup[end.replace(/[_-]+/g, " ")] = bc;
+  }
+}
+
+var navBar = `<li><a href="${location.origin || '/'}">${siteName}</a></li>`;
+for (let k in breadcrumbLookup) {
+  let url = `${breadcrumbLookup[k]}`;
+  navBar += `<li><a href="${url}">${k}</a></li>`;
+}
+navBar = `<ul>${navBar}</ul>`;
+document.getElementById('nav').innerHTML = navBar;
+
+document.getElementById('header').innerHTML = `<ul>
+  <li>${new Date()}</li>
+</ul>
+<p><a href="${markdownFile}?raw=true">Download ${markdownFile}</a></p>
+
+`
+document.getElementById('footer').innerHTML = `<ul>
+  <li><a href="${location.hostname}/">${siteName}</a></li>
+  <li>${new Date()}</li>
+</ul>`
+
+var fetch_callback = function(text) {
+  return marked(text,
+    function (err, content) {
+      if (err) throw err;
+      document.getElementById('content').innerHTML = content;
+    });
+};
+
+console.log(`Fetching ${markdownFile}`);
+if (self.fetch) { // Test to see if browser feels fetch
+  let myRequest = new Request(markdownFile);
+  fetch(myRequest).then(response => response.text().then(fetch_callback));
+} else { // fetch isn't supported, so the elegantly named XMLHttpRequest sallies forth
+  let grabber = new XMLHttpRequest();
+  grabber.resposeType = 'text';
+  
+  grabber.onload = function(event) { 
+    let text = grabber.response;
+    if (text) fetch_callback(text);
+  }
+  grabber.open('GET', markdownFile, true); // true for asynchronous
+  grabber.overrideMimeType('text/markdown');
+  grabber.send();
+}
+  </script>
+</body>
+</html>
